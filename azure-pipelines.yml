@@ -22,9 +22,29 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-- task: VSBuild@1
+
+- task: UseDotNet@2
+  displayName: '.NET Core SDK 3.0'
   inputs:
-    platform: 'x86'
-    solution: '$(solution)'
-    configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(appxPackageDir)" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload'
+    version: 3.0.100
+
+- task: DotNetCoreCLI@2
+  displayName: publish
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: '**/*.csproj'
+    arguments: '-o publish'
+    zipAfterPublish: false
+    modifyOutputPath: false
+
+- task: AzureFileCopy@2
+  displayName: 'AzureBlob File Copy'
+  inputs:
+    SourcePath: publish
+    azureSubscription: azureRM
+    Destination: AzureBlob
+    storage: tooldeployment
+    ContainerName: pingtoolfiles
+    BlobPrefix: tool
+
